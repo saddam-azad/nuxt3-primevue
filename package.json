@@ -13,7 +13,8 @@
         "nuxt": "3.0.0",
         "primeflex": "3.3.0",
         "primeicons": "6.0.1",
-        "primevue": "3.21.0"
+        "primevue": "3.21.0",
+        "sass": "^1.56.1"
     },
     "dependencies": {
         "@vuelidate/core": "^2.0.0",
