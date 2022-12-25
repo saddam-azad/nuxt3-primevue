@@ -6,20 +6,26 @@
             <div class="card">
                 <h2 class="text-center">Create Library</h2>
 			
-				<form @submit.prevent="handleSubmit">
+				<form @submit.prevent="handleSubmit(!v$.$invalid)">
 					<div class="field">
                         <div class="p-float-label">
-                            <InputText id="name" name="name" v-model="text" />
-                            <label for="name">Library Name*</label>
+							<InputText id="name" name="name" v-model="v$.name.$model" :class="{'p-invalid': v$.name.$invalid && submitted }" />
+                            <label for="name" :class="{'p-error':v$.name.$invalid && submitted}">Library Name*</label>
                         </div>
-                    </div>
+						<span v-if="v$.name.$error && submitted">
+                            <span id="name-error" v-for="(error, index) of v$.name.$errors" :key="index">
+                            <small class="p-error">{{error.$message}}</small>
+                            </span>
+                        </span>
+                        <small v-else-if="(v$.name.$invalid && submitted) || v$.name.$pending.$response" class="p-error">{{v$.name.required.$message.replace('Value', 'Name')}}</small>
+					</div>
 
 					<div class="field">
 						<Dropdown name="author" v-model="selectedAuthor" :options="authors" optionLabel="name" optionValue="id" @change="changeAuthor($event)"  placeholder="Select an author" />
 					</div>
 
 					<div class="field">
-						<Dropdown name="book" v-model="selectedBook" :options="books" optionLabel="name" optionValue="id" placeholder="Select a book" />
+						<Dropdown name="book" v-model="selectedBook" :options="state.books" optionLabel="name" optionValue="id" placeholder="Select a book" />
 					</div>
 					
 
@@ -32,15 +38,14 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { useToast } from "primevue/usetoast";
 import { useVuelidate } from "@vuelidate/core";
-import { email, required } from "@vuelidate/validators";
+import { required,alphaNum, minLength } from "@vuelidate/validators";
 import { useAuthorStore } from '~/stores/author';
 
 /**
  * Types
  */
- interface Author {
+interface Author {
   id: string,
   name: string,
   createdAt: Date
@@ -55,20 +60,32 @@ interface Book {
 /**
  * Fetch data from pinia store
  */
-const text = ref();
 const authorStore = useAuthorStore();
 const authors: Author[] = await authorStore.getAuthors();
+
+/**
+ * Reactive bits
+ */
 let selectedAuthor = ref();
 let selectedBook = ref();
-let books = ref<Book[]>([]);
+
+const state = reactive({
+	name: null,
+	books: [] as Book[]
+})
+
+/**
+ * Switch author dropdown
+ * @param event Selected option in dropdown
+ */
 
 async function changeAuthor(event) {
 	console.log(event);
 
 	try {
 		const data: Array<Book> = await $fetch('https://63a1958ba543280f775b0a50.mockapi.io/books');
-		books.value = data;
-
+		// books.value = data;
+		state.books = data;
 	} catch (error) {
 		console.error(error);
 	}
@@ -77,27 +94,29 @@ async function changeAuthor(event) {
 /**
  * Submit 
  */
-const toast = useToast();
 const handleSubmit = ( event ) => {
-	const form = event.target;
-	const formData = new FormData(form);
-	formData.append('author', selectedAuthor.value);
-	formData.append('book', selectedBook.value);
-	console.log(formData);
+	submitted.value = true;
 
-	toast.add({ severity: "info", summary: "Hello " + text.value });
+	if (!event) {
+		return;
+	} else {
+		const formData = new FormData();
+		formData.append('name', state?.name);
+		formData.append('author', selectedAuthor.value);
+		formData.append('book', selectedBook.value);
+		console.log(formData);
+	}
 };
 
 /**
  * Validation
  */
 const rules = {
-	text: { required },
-	author: { required }
+	name: { required, alphaNum, minLength: minLength(3) },
 }
 
-
-
+const submitted = ref(false);
+const v$ = useVuelidate(rules, state);
 
 </script>
 
