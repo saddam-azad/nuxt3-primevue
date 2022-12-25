@@ -51,6 +51,10 @@ import { useAuthorStore } from '~/stores/author';
 import { useToast } from "primevue/usetoast"; 
 const toast = useToast();
 
+definePageMeta({
+  title: "Nuxt3 + PrimeVUE Starter"
+})
+
 /**
  * Types
  */
