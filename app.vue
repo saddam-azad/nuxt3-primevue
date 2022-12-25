@@ -12,23 +12,30 @@
 							<InputText id="name" name="name" v-model="v$.name.$model" :class="{'p-invalid': v$.name.$invalid && submitted }" />
                             <label for="name" :class="{'p-error':v$.name.$invalid && submitted}">Library Name*</label>
                         </div>
-						<span v-if="v$.name.$error && submitted">
+						<div v-if="v$.name.$error && submitted">
                             <span id="name-error" v-for="(error, index) of v$.name.$errors" :key="index">
-                            <small class="p-error">{{error.$message}}</small>
+								<small class="p-error">{{error.$message}}</small>
                             </span>
-                        </span>
-                        <small v-else-if="(v$.name.$invalid && submitted) || v$.name.$pending.$response" class="p-error">{{v$.name.required.$message.replace('Value', 'Name')}}</small>
+                        </div>
+                        <div v-else-if="(v$.name.$invalid && submitted) || v$.name.$pending.$response">
+							<small class="p-error">{{v$.name.required.$message.replace('Value', 'Name')}}</small>
+						</div>
 					</div>
 
 					<div class="field">
-						<Dropdown name="author" v-model="selectedAuthor" :options="authors" optionLabel="name" optionValue="id" @change="changeAuthor($event)"  placeholder="Select an author" />
+						<Dropdown name="author" v-model="state.selectedAuthor" :options="state.authors" optionLabel="name" optionValue="id" @change="changeAuthor($event)"  placeholder="Select an author" :class="{'p-invalid': v$.selectedAuthor.$invalid && submitted }" />
+						<div v-if="v$.selectedAuthor.$invalid && submitted">
+							<small class="p-error">Required.</small>
+						</div>
 					</div>
 
 					<div class="field">
-						<Dropdown name="book" v-model="selectedBook" :options="state.books" optionLabel="name" optionValue="id" placeholder="Select a book" />
+						<Dropdown name="book" v-model="state.selectedBook" :options="state.books" optionLabel="name" optionValue="id" placeholder="Select a book" :class="{'p-invalid': v$.selectedBook.$invalid && submitted }" />
+						<div v-if="v$.selectedBook.$invalid && submitted">
+							<small class="p-error">Required.</small>
+						</div>
 					</div>
 					
-
 					<Button type="submit" label="Submit" />
 				</form>
 			</div>
@@ -61,30 +68,27 @@ interface Book {
  * Fetch data from pinia store
  */
 const authorStore = useAuthorStore();
-const authors: Author[] = await authorStore.getAuthors();
+// const authors: Author[] = await authorStore.getAuthors();
 
 /**
  * Reactive bits
  */
-let selectedAuthor = ref();
-let selectedBook = ref();
-
 const state = reactive({
 	name: null,
-	books: [] as Book[]
+	books: [] as Book[],
+	authors: await authorStore.getAuthors() as Author[],
+	selectedAuthor: '',
+	selectedBook: ''
 })
 
 /**
  * Switch author dropdown
  * @param event Selected option in dropdown
  */
-
 async function changeAuthor(event) {
-	console.log(event);
-
+	// console.log(event.value);
 	try {
-		const data: Array<Book> = await $fetch('https://63a1958ba543280f775b0a50.mockapi.io/books');
-		// books.value = data;
+		const data: Book[] = await $fetch('https://63a1958ba543280f775b0a50.mockapi.io/books');
 		state.books = data;
 	} catch (error) {
 		console.error(error);
@@ -92,7 +96,20 @@ async function changeAuthor(event) {
 };
 
 /**
+ * Validation
+ */
+ const rules = {
+	name: { required, alphaNum, minLength: minLength(3) },
+	selectedAuthor: { required }, 
+	selectedBook: { required }
+}
+
+const submitted = ref(false);
+const v$ = useVuelidate(rules, state);
+
+/**
  * Submit 
+ * @param event boolean true if no validation errors
  */
 const handleSubmit = ( event ) => {
 	submitted.value = true;
@@ -101,23 +118,12 @@ const handleSubmit = ( event ) => {
 		return;
 	} else {
 		const formData = new FormData();
-		formData.append('name', state?.name);
-		formData.append('author', selectedAuthor.value);
-		formData.append('book', selectedBook.value);
+		formData.append('name', state.name);
+		formData.append('author', state.selectedAuthor);
+		formData.append('book', state.selectedBook);
 		console.log(formData);
 	}
 };
-
-/**
- * Validation
- */
-const rules = {
-	name: { required, alphaNum, minLength: minLength(3) },
-}
-
-const submitted = ref(false);
-const v$ = useVuelidate(rules, state);
-
 </script>
 
 <style>
