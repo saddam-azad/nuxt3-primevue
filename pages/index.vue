@@ -12,26 +12,26 @@
 							<InputText id="name" name="name" v-model="v$.name.$model" :class="{'p-invalid': v$.name.$invalid && submitted }" />
                             <label for="name" :class="{'p-error':v$.name.$invalid && submitted}">Library Name*</label>
                         </div>
-						<div v-if="v$.name.$error && submitted">
+						<div class="warning" v-if="v$.name.$error && submitted">
                             <span id="name-error" v-for="(error, index) of v$.name.$errors" :key="index">
 								<small class="p-error">{{error.$message}}</small>
                             </span>
                         </div>
-                        <div v-else-if="(v$.name.$invalid && submitted) || v$.name.$pending.$response">
+                        <div class="warning" v-else-if="(v$.name.$invalid && submitted) || v$.name.$pending.$response">
 							<small class="p-error">{{v$.name.required.$message.replace('Value', 'Name')}}</small>
 						</div>
 					</div>
 
 					<div class="field">
 						<Dropdown name="author" v-model="state.selectedAuthor" :options="state.authors" optionLabel="name" optionValue="id" @change="changeAuthor($event)"  placeholder="Select an author" :class="{'p-invalid': v$.selectedAuthor.$invalid && submitted }" />
-						<div v-if="v$.selectedAuthor.$invalid && submitted">
+						<div class="warning" v-if="v$.selectedAuthor.$invalid && submitted">
 							<small class="p-error">Required.</small>
 						</div>
 					</div>
 
 					<div class="field">
 						<Dropdown name="book" v-model="state.selectedBook" :options="state.books" optionLabel="name" optionValue="id" placeholder="Select a book" :class="{'p-invalid': v$.selectedBook.$invalid && submitted }" />
-						<div v-if="v$.selectedBook.$invalid && submitted">
+						<div class="warning" v-if="v$.selectedBook.$invalid && submitted">
 							<small class="p-error">Required.</small>
 						</div>
 					</div>
